@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8" />
+	<title>Highcharts Test</title>
+
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	<script src="https://code.highcharts.com/modules/boost.js"></script>
+
+	<script type="text/javascript">
+		function Str2ObjArray(str, dataPoints) {
+			var rows = [];
+			var colums = [];
+			var values = [];
+			var i = 0;
+			var j = 0;
+			var n = 0;
+			var t = 0;
+
+			rows = str.split("\n");
+
+			for (i = 0; i < rows.length; i++) {
+				colums = rows[i].split("\t");
+
+				if (colums.length != 2) {
+					console.log("i = " + i + ", t = " + colums[0] + ", data = " + colums[1]);
+					continue;
+				}
+
+				t = (new Date(colums[0])).valueOf();
+
+				values = colums[1].split(",");
+				n = values.length;					//increase number of dataPoints by increasing this
+
+				for (j = 0; j < n; j++ , t += 10) {
+					dataPoints.push([
+						new Date(t),
+						parseFloat(values[j])
+					]);
+				}
+			}
+
+			return true;
+		}
+
+		function onLoaded(event) {
+			var data = [];
+
+			if (Str2ObjArray(event.target.result, data) == false) {
+				alert("Str2ObjArray()に失敗しました。");
+				console.log("Str2ObjArray() failed.");
+				return;
+			}
+
+			Highcharts.chart('container', {
+				chart: {
+					animation: false,
+					zoomType: 'x'
+				},
+				title: {
+					text: '生信号'
+				},
+				subtitle: {
+					text: document.ontouchstart === undefined ?
+						'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+				},
+				xAxis: {
+					type: 'datetime'
+				},
+				// yAxis: {
+				// 	title: {
+				// 		text: 'Exchange rate'
+				// 	}
+				// },
+				legend: {
+					enabled: false
+				},
+				plotOptions: {
+					// area: {
+					// 	fillColor: {
+					// 		linearGradient: {
+					// 			x1: 0,
+					// 			y1: 0,
+					// 			x2: 0,
+					// 			y2: 1
+					// 		},
+					// 		stops: [
+					// 			[0, Highcharts.getOptions().colors[0]],
+					// 			[1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+					// 		]
+					// 	},
+					// 	marker: {
+					// 		radius: 2
+					// 	},
+					// 	lineWidth: 1,
+					// 	states: {
+					// 		hover: {
+					// 			lineWidth: 1
+					// 		}
+					// 	},
+					// 	threshold: null
+					// }
+					line: {
+						animation: false,
+						// enableMouseTracking: false,
+						states: {
+							hover: {
+								lineWidthPlus: 0,
+								marker: {
+									enabled: false
+								}
+							}
+						}
+					}
+				},
+
+				// tooltip: [{
+				// 	animation: false
+				// }],
+				series: [{
+					type: 'line',
+					name: 'Value',
+					data: data
+				}]
+			});
+
+			alert("ファイルの読み込みが完了しました！");
+			console.log("text has read.");
+		}
+
+		function onError(event) {
+			if (event.target.error.code == event.target.error.NOT_READABLE_ERR) {
+				alert("ファイルの読み込みに失敗しました！");
+			} else {
+				alert("エラーが発生しました。" + event.target.error.code);
+			}
+		}
+
+		function ReadTxt(event) {
+			var file = event.target.files[0];
+
+			if (!file) {
+				return;
+			}
+
+			var reader = new FileReader();
+
+			reader.addEventListener("load", onLoaded);
+			reader.addEventListener("error", onError);
+
+			reader.readAsText(file, "Shift_JIS");
+		}
+	</script>
+</head>
+
+<body>
+	<h1>Highcharts Test</h1>
+	<form><input type="file" id="inFile"></form>
+	<script type="text/javascript">
+		document.getElementById("inFile").addEventListener("change", ReadTxt, false);
+	</script>
+	<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+</body>
+
+</html>

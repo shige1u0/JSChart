@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8" />
+	<title>IgniteUI Test</title>
+
+    <!-- Ignite UI Required Combined CSS Files -->
+    <link href="http://cdn-na.infragistics.com/igniteui/2016.2/latest/css/themes/infragistics/infragistics.theme.css" rel="stylesheet" />
+    <link href="http://cdn-na.infragistics.com/igniteui/2016.2/latest/css/structure/infragistics.css" rel="stylesheet" />
+
+    <script src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-2.8.3.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+
+    <!-- Ignite UI Required Combined JavaScript Files -->
+    <script src="http://cdn-na.infragistics.com/igniteui/2016.2/latest/js/infragistics.core.js"></script>
+    <script src="http://cdn-na.infragistics.com/igniteui/2016.2/latest/js/infragistics.dv.js"></script>
+
+	<script type="text/javascript">
+		function Str2ObjArray(str, dataPoints) {
+			var rows = [];
+			var colums = [];
+			var values = [];
+			var i = 0;
+			var j = 0;
+			var n = 0;
+			var t = 0;
+
+			rows = str.split("\n");
+
+			for (i = 0; i < rows.length; i++) {
+				colums = rows[i].split("\t");
+
+				if (colums.length != 2) {
+					console.log("i = " + i + ", t = " + colums[0] + ", data = " + colums[1]);
+					continue;
+				}
+
+				t = (new Date(colums[0])).valueOf();
+
+				values = colums[1].split(",");
+				n = values.length;					//increase number of dataPoints by increasing this
+
+				for (j = 0; j < n; j++ , t += 10) {
+					dataPoints.push({
+						x: new Date(t),
+						y: parseFloat(values[j])
+					});
+				}
+			}
+
+			return true;
+		}
+
+		function onLoaded(event) {
+			var data = [];
+
+			if (Str2ObjArray(event.target.result, data) == false) {
+				alert("Str2ObjArray()に失敗しました。");
+				console.log("Str2ObjArray() failed.");
+				return;
+			}
+
+			$("#chart").igDataChart({
+				dataSource: data,
+				width: "100%",
+				height: "500px",
+				title: "生信号",
+				axes: [{
+					name: "xAxis",
+					type: "categoryX",
+					label: "x"
+				}, {
+					name: "yAxis",
+					type: "numericY"
+				}],
+				series: [{
+					name: "series1",
+					title: "Test Series",
+					type: "line",
+					xAxis: "xAxis",
+					yAxis: "yAxis",
+					valueMemberPath: "y",
+					showTooltip: true,
+					isTransitionInEnabled: true,
+					isHighlightingEnabled: true,
+					tooltipTemplate: "tooltipTemplate"
+				}],
+				horizontalZoomable: true,
+				verticalZoomable: false,
+				windowResponse: "immediate"
+			});
+
+			// $("#chart").igDataChart({
+			// 	dataSource: data
+			// });
+
+			alert("ファイルの読み込みが完了しました！");
+			console.log("text has read.");
+		}
+
+		function onError(event) {
+			if (event.target.error.code == event.target.error.NOT_READABLE_ERR) {
+				alert("ファイルの読み込みに失敗しました！");
+			} else {
+				alert("エラーが発生しました。" + event.target.error.code);
+			}
+		}
+
+		function ReadTxt(event) {
+			var file = event.target.files[0];
+
+			if (!file) {
+				return;
+			}
+
+			var reader = new FileReader();
+
+			reader.addEventListener("load", onLoaded);
+			reader.addEventListener("error", onError);
+
+			reader.readAsText(file, "Shift_JIS");
+		}
+	</script>
+</head>
+
+<body>
+	<h1>IgniteUI Test</h1>
+	<form><input type="file" id="inFile"></form>
+	<script type="text/javascript">
+		document.getElementById("inFile").addEventListener("change", ReadTxt, false);
+	</script>
+
+   <script id="tooltipTemplate" type="text/x-jquery-tmpl">
+        <table>
+            <tr>
+                <td colspan="2" class="tooltip">Test Series: ${item.y}</td>
+            </tr>
+        </table>
+    </script>
+
+	<div style="height: 520px; width: 90%; min-width: 210px;">
+		<div id="chart"></div>
+	</div>
+</body>
+
+</html>

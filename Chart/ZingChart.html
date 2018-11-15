@@ -1,0 +1,233 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8" />
+	<title>ZingChart Test</title>
+
+	<style type="text/css">
+		html, body {
+			height: 100%;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		
+		.zc-ref {
+			display: none;
+		}
+	</style>
+
+	<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+	<script type="text/javascript">
+		zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+		ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
+	</script>
+	<script type="text/javascript">
+		function Str2ObjArray(str, dataPoints) {
+			var rows = [];
+			var colums = [];
+			var times = [];
+			var values = [];
+			var v = [];
+			var i = 0;
+			var j = 0;
+			var n = 0;
+			var t = 0;
+
+			rows = str.split("\n");
+
+			for (i = 0; i < rows.length; i++) {
+				colums = rows[i].split("\t");
+
+				if (colums.length != 2) {
+					console.log("i = " + i + ", t = " + colums[0] + ", data = " + colums[1]);
+					continue;
+				}
+
+				t = (new Date(colums[0])).valueOf();
+
+				v = colums[1].split(",");
+				n = v.length;					//increase number of dataPoints by increasing this
+
+				for (j = 0; j < n; j++ , t += 10) {
+					times.push(new Date(t));
+					values.push(parseFloat(v[j]));
+				}
+			}
+
+			dataPoints[0] = times;
+			dataPoints[1] = values;
+
+			return true;
+		}
+
+		function onLoaded(event) {
+			var data = [];
+
+			if (Str2ObjArray(event.target.result, data) == false) {
+				alert("Str2ObjArray()に失敗しました。");
+				console.log("Str2ObjArray() failed.");
+				return;
+			}
+
+			var myConfig = {
+				gui: {
+					contextMenu: {
+						position: "right",
+						docked: true,
+						alpha: 0.9,
+						item: {
+							textAlpha: 1
+						},
+						button: {
+							visible: true
+						}
+					}
+				},
+				graphset: [
+					{
+						type: "line",
+						borderColor: "#cccccc",
+						borderWidth: 1,
+						borderRadius: 2,
+						// plot: {
+						// 	aspect: "spline"
+						// },
+						plotarea: {
+							margin: "dynamic"
+						},
+						utc: true,
+						timezone: 8,
+						title: {
+							text: "生信号",
+							adjustLayout: true,
+							align: "left",
+							marginLeft: "15%"
+						},
+						legend: {
+							draggable: true,
+							backgroundColor: "transparent",
+							// header: {
+							// 	text: "Facility N",
+							// 	backgroundColor: "#f0f0f0"
+							// },
+							marker: {
+								visible: false
+							},
+							item: {
+								margin: "5 17 2 0",
+								padding: "3 3 3 3",
+								fontColor: "#fff",
+								cursor: "hand"
+							},
+							verticalAlign: "middle",
+							borderWidth: 0
+						},
+						scaleX: {
+							minValue: data[0][0].valueOf(),	//set minValue timestamp
+							// maxValue: data[0][data[0].length - 1].valueOf(),
+							step: 10, 						//set step for scale
+							maxItems: 8,
+							itemsOverlap: true,
+							zooming: true,
+							transform: {
+								type: "date",
+								all: "%Y-%mm-%dd<br>%H:%i:%s:%q"
+							}
+						},
+						preview: {
+							adjustLayout: true,
+							live: true
+						},
+						scaleY: {
+							minValue: Math.min.apply(null, data[1]),
+							maxValue: Math.max.apply(null, data[1]),
+							// step: 10000,
+							// maxItems: 8,
+							itemsOverlap: true,
+							label: {
+								text: "Value"
+							},
+							guide: {
+								lineStyle: "solid"
+							}
+						},
+						crosshairX: {
+							lineColor: "#555",
+							plotLabel: {
+								backgroundColor: "#fff",
+								multiple: true,
+								borderWidth: 2,
+								borderRadius: 2,
+							},
+							marker: {
+								size: 5,
+								borderWidth: 1,
+								borderColor: "#fff"
+							}
+						},
+						tooltip: {
+							visible: false
+						},
+						series: [
+							{
+								values: data[1],
+								text: "Value",
+								legendItem: {
+									backgroundColor: "#29A2CC",
+									borderRadius: 2
+								}
+							}
+						]
+					}
+				]
+			};
+
+			zingchart.render({
+				id: "myChart",
+				data: myConfig
+				// height: "100%",
+				// width: "100%"
+			});
+
+			alert("ファイルの読み込みが完了しました！");
+			console.log("text has read.");
+		}
+
+		function onError(event) {
+			if (event.target.error.code == event.target.error.NOT_READABLE_ERR) {
+				alert("ファイルの読み込みに失敗しました！");
+			} else {
+				alert("エラーが発生しました。" + event.target.error.code);
+			}
+		}
+
+		function ReadTxt(event) {
+			var file = event.target.files[0];
+
+			if (!file) {
+				return;
+			}
+
+			var reader = new FileReader();
+
+			reader.addEventListener("load", onLoaded);
+			reader.addEventListener("error", onError);
+
+			reader.readAsText(file, "Shift_JIS");
+		}
+	</script>
+</head>
+
+<body>
+	<h1>ZingChart Test</h1>
+	<form><input type="file" id="inFile"></form>
+	<script type="text/javascript">
+		document.getElementById("inFile").addEventListener("change", ReadTxt, false);
+	</script>
+	<div id="myChart"><a class="zc-ref" href="https://www.zingchart.com/">Charts by ZingChart</a></div>
+</body>
+
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8" />
+	<title>ECharts Test</title>
+
+	<script src="./lib/echarts.common.min.js"></script>
+	<script type="text/javascript">
+		function Str2ObjArray(str, dataPoints) {
+			var rows = [];
+			var colums = [];
+			var values = [];
+			var i = 0;
+			var j = 0;
+			var n = 0;
+			var t = 0;
+
+			rows = str.split("\n");
+
+			for (i = 0; i < rows.length; i++) {
+				colums = rows[i].split("\t");
+
+				if (colums.length != 2) {
+					console.log("i = " + i + ", t = " + colums[0] + ", data = " + colums[1]);
+					continue;
+				}
+
+				t = (new Date(colums[0])).valueOf();
+
+				values = colums[1].split(",");
+				n = values.length;					//increase number of dataPoints by increasing this
+
+				for (j = 0; j < n; j++ , t += 10) {
+					dataPoints.push([
+						new Date(t),
+						parseFloat(values[j])
+					]);
+				}
+			}
+
+			return true;
+		}
+
+		function onLoaded(event) {
+			var data = [];
+
+			if (Str2ObjArray(event.target.result, data) == false) {
+				alert("Str2ObjArray()に失敗しました。");
+				console.log("Str2ObjArray() failed.");
+				return;
+			}
+
+			// based on prepared DOM, initialize echarts instance
+			var myChart = echarts.init(document.getElementById("main"));
+
+			// specify chart configuration item and data
+			var option = {
+				title: {
+					text: "生信号"
+				},
+				animation: false,
+				addDataAnimation: false,
+				dataZoom: {
+					show: true
+				},
+				// tooltip: {},
+				legend: {
+					data: ["sig"]
+				},
+				xAxis: {
+					type: "time"
+				},
+				yAxis: {
+					type: "value"
+				},
+				series: [{
+					name: "sig",
+					type: "line",
+					showSymbol: false,
+					data: data
+				}]
+			};
+
+			// use configuration item and data specified to show chart
+			myChart.setOption(option);
+
+
+			alert("ファイルの読み込みが完了しました！");
+			console.log("text has read.");
+		}
+
+		function onError(event) {
+			if (event.target.error.code == event.target.error.NOT_READABLE_ERR) {
+				alert("ファイルの読み込みに失敗しました！");
+			} else {
+				alert("エラーが発生しました。" + event.target.error.code);
+			}
+		}
+
+		function ReadTxt(event) {
+			var file = event.target.files[0];
+
+			if (!file) {
+				return;
+			}
+
+			var reader = new FileReader();
+
+			reader.addEventListener("load", onLoaded);
+			reader.addEventListener("error", onError);
+
+			reader.readAsText(file, "Shift_JIS");
+		}
+	</script>
+</head>
+
+<body>
+	<h1>ECharts Test</h1>
+	<form><input type="file" id="inFile"></form>
+	<script type="text/javascript">
+		document.getElementById("inFile").addEventListener("change", ReadTxt, false);
+	</script>
+	<!-- preparing a DOM with width and height for ECharts -->
+	<div id="main" style="width: 600px;height:400px;"></div>
+</body>
+
+</html>
